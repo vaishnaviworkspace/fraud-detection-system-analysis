@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transaction Risk & Anomaly Analysis</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#EEF1F5;--sf:#fff;--ink:#17202E;--mut:#5C6779;--ln:#D8DEE8;--ac:#2F4BDB;--ok:#2E8B6A;--wn:#C98A00;--bad:#C92A4B;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1521;--sf:#171F2E;--ink:#E6EBF3;--mut:#93A0B5;--ln:#2A3548;--ac:#7C93FF;--ok:#4FC39A;--wn:#E5B33A;--bad:#FF6B88}}
+:root[data-theme="dark"]{--bg:#0F1521;--sf:#171F2E;--ink:#E6EBF3;--mut:#93A0B5;--ln:#2A3548;--ac:#7C93FF;--ok:#4FC39A;--wn:#E5B33A;--bad:#FF6B88}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sf);border-bottom:1px solid var(--ln);padding:12px 20px;display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center}
+h1{font-size:18px;margin:0;font-weight:600}h2{font-size:16px;margin:0 0 10px;font-weight:600}h3{font-size:14px;margin:0 0 6px;font-weight:600}
+.ctl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}.ctl b{color:var(--ink);min-width:24px}
+input[type=range]{accent-color:var(--ac);width:120px}
+button{font:inherit;cursor:pointer;border:1px solid var(--ln);background:var(--sf);color:var(--ink);padding:6px 12px;border-radius:6px}
+button:focus-visible,input:focus-visible,tr:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+nav{display:flex;gap:4px;padding:10px 20px 0;overflow-x:auto}
+nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--mut);white-space:nowrap}
+nav button[aria-selected=true]{color:var(--ink);border-color:var(--ac);font-weight:600}
+main{padding:16px 20px 40px;max-width:1200px;margin:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.k{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px 14px}.k span{display:block;font-size:12px;color:var(--mut)}.k b{font-size:22px;font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px}.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.p{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:14px 16px;min-width:0}
+.sc{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--mut);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--ln)}td{padding:6px 8px;border-bottom:1px solid var(--ln);white-space:nowrap}
+tbody tr{cursor:pointer}tbody tr:hover,tr.sel{background:color-mix(in srgb,var(--ac) 9%,transparent)}
+.bd{padding:2px 8px;border-radius:10px;font-size:12px;font-weight:500}
+.Approve{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}.Review{background:color-mix(in srgb,var(--wn) 18%,transparent);color:var(--wn)}.Block{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:5px 0}.bar i{display:block;height:8px;border-radius:4px;background:var(--bad)}.bar em{flex:1;font-style:normal}
+.mut{color:var(--mut);font-size:13px}svg{width:100%;height:auto;display:block}svg text{fill:var(--mut);font-size:10px}
+.mx{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;max-width:380px}.mx div{aspect-ratio:1;border-radius:4px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+.mx u{text-decoration:none;background:var(--ink);color:var(--sf);border-radius:50%;width:20px;height:20px;display:grid;place-items:center}
+ul{margin:4px 0;padding-left:18px}li{margin:3px 0}.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.flow span{border:1px solid var(--ln);border-radius:6px;padding:4px 10px;font-size:13px}
+.hid{display:none}
+</style></head><body>
+<header>
+<h1>Transaction Risk &amp; Anomaly Analysis</h1><span class="mut">Scored by the trained gradient-boosting model</span>
+<label class="ctl">Review above <input id="rv" type="range" min="10" max="80" value="45"><b id="rvv">45</b></label>
+<label class="ctl">Block above <input id="bk" type="range" min="30" max="100" value="90"><b id="bkv">90</b></label>
+<button id="pp">Pause stream</button>
+</header>
+<nav role="tablist"><button role="tab" data-t="mon" aria-selected="true">Live monitor</button><button role="tab" data-t="ano" aria-selected="false">Anomaly analysis</button><button role="tab" data-t="rsk" aria-selected="false">Risk management</button><button role="tab" data-t="ba" aria-selected="false">Business analysis</button></nav>
+<main>
+<div class="kpis" id="kp"></div>
+
+<section id="mon"><div class="grid">
+<div class="p sc"><h2>Incoming transactions</h2><table><thead><tr><th>Time</th><th>Customer</th><th>Category</th><th>Amount</th><th>Score</th><th>Decision</th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="p"><h2>Why this score?</h2><div id="ex" class="mut">Select a transaction to see which signals raised its risk score.</div></div>
+</div></section>
+
+<section id="ano" class="hid"><div class="g2">
+<div class="p"><h2>Amount by hour of day</h2><p class="mut">Each dot is a transaction. Fraud clusters at night and at amounts far above normal.</p><div id="sc1"></div></div>
+<div class="p"><h2>Score distribution</h2><p class="mut">Legitimate vs fraudulent transactions. Dashed lines show your review and block thresholds.</p><div id="sc2"></div></div>
+<div class="p"><h2>Flag rate by category</h2><div id="cat"></div></div>
+<div class="p"><h2>Most anomalous customers</h2><p class="mut">Customers with the highest number of flagged transactions.</p><div id="cu"></div></div>
+</div></section>
+
+<section id="rsk" class="hid"><div class="g2">
+<div class="p"><h2>Threshold trade-off</h2><p class="mut">Total cost = fraud that slipped through + customer friction from blocks + analyst time on reviews. Move the sliders to find the low point.</p><div id="sc3"></div></div>
+<div class="p"><h2>Risk matrix</h2><div class="mx" id="mx"></div><p class="mut">Numbers match the register below. Colour = likelihood × impact.</p></div>
+</div>
+<div class="p sc" style="margin-top:16px"><h2>Risk register</h2><table><thead><tr><th>#</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Rating</th><th>Mitigation</th><th>Owner</th></tr></thead><tbody id="rr"></tbody></table></div></section>
+
+<section id="ba" class="hid"><div class="g2">
+<div class="p"><h2>Problem and objective</h2><p>Card and wallet fraud costs money and trust, but blocking too aggressively loses good customers. The goal is to catch most fraud while keeping false declines and analyst workload manageable.</p>
+<h3>Success measures</h3><ul><li>Fraud catch rate (recall) of 85% or more</li><li>Precision of 40% or more among flagged transactions</li><li>Under 8% of transactions sent to manual review</li><li>Decision in under 200 ms</li></ul></div>
+<div class="p"><h2>Stakeholders</h2><ul><li><b>Fraud operations:</b> work the review queue, need clear reasons</li><li><b>Customers:</b> want fewer wrongful declines</li><li><b>Finance:</b> tracks fraud loss and chargebacks</li><li><b>Compliance:</b> audit trail, PCI DSS and data privacy</li><li><b>Product:</b> checkout friction</li></ul></div>
+<div class="p"><h2>Requirements (MoSCoW)</h2><ul><li><b>Must:</b> score every transaction in real time; explain each score; approve, review or block bands</li><li><b>Must:</b> adjustable thresholds with cost impact shown</li><li><b>Should:</b> per-customer baseline; analyst feedback loop</li><li><b>Could:</b> device graph; step-up authentication</li><li><b>Won't (v1):</b> automated chargeback disputes</li></ul></div>
+<div class="p"><h2>Decision process</h2><div class="flow"><span>Transaction</span>→<span>Feature checks</span>→<span>Risk score 0–100</span>→<span>Approve / Review / Block</span>→<span>Analyst label</span>→<span>Threshold review</span></div>
+<h3 style="margin-top:14px">Assumptions</h3><ul><li>Data is synthetic (about 3% fraud) and scored by the trained model, so real rates will differ</li><li>Review is assumed to resolve correctly</li><li>Block friction ₹150 and review time ₹60 per case are placeholders to validate with Finance</li></ul></div>
+</div></section>
+</main>
+<script>
+const DATA=/*DATA*/[];
+const R=(s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296})(7);
+const pick=a=>a[Math.floor(R()*a.length)],$=id=>document.getElementById(id),inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const CATS=[['Grocery',0],['Fuel',0],['Dining',0],['Utilities',0],['Travel',3],['Electronics',8],['Gift cards',12],['Crypto',14]];
+const CU=/*CUST*/{};
+const FRIC=150,REVC=60;let T=[],n=0,sel=null,tab='mon',run=true,rev=45,blk=90;
+let ptr=0;const SIG=['Amount far above this customer’s norm','Burst of transactions in the last hour','Country differs from home','Unrecognised device','Unusual hour','High-risk merchant category'];
+function gen(){const d=DATA[ptr++%DATA.length],t={id:++n,c:{id:d[0]},f:!!d[7],a:d[2],hr:d[3],vel:d[4],geo:!!d[5],dev:!!d[6],cat:[d[1],d[8]],s:d[9],an:d[10],p:d[11].map((v,i)=>[SIG[i],v]).filter(x=>x[1]>=1),ts:new Date()};T.push(t);if(T.length>1500)T.shift();return t}
+const dec=(s,r=rev,b=blk)=>s>=b?'Block':s>=r?'Review':'Approve';
+function stats(r=rev,b=blk){let fl=0,tp=0,fr=0,miss=0,fp=0,rv=0,prev=0;
+ T.forEach(t=>{const d=dec(t.s,r,b);if(t.f)fr++;if(d!='Approve'){fl++;if(t.f){tp++;prev+=t.a}}if(d=='Review')rv++;if(t.f&&d=='Approve')miss+=t.a;if(!t.f&&d=='Block')fp++});
+ return{N:T.length,fl,tp,fr,miss,fp,rv,prev,rec:fr?tp/fr:0,pre:fl?tp/fl:0,cost:miss+fp*FRIC+rv*REVC}}
+function kpis(){const s=stats(),k=(l,v)=>`<div class="k"><span>${l}</span><b>${v}</b></div>`;
+ $('kp').innerHTML=k('Transactions',s.N)+k('Flagged',s.fl+' ('+(s.fl/s.N*100).toFixed(1)+'%)')+k('Fraud caught',(s.rec*100).toFixed(0)+'%')+k('Precision',(s.pre*100).toFixed(0)+'%')+k('Loss prevented',inr(s.prev))+k('Total cost',inr(s.cost))}
+function mon(){const rows=T.slice(-14).reverse();$('tb').innerHTML=rows.map(t=>{const d=dec(t.s);return`<tr tabindex="0" data-i="${t.id}" class="${sel&&sel.id==t.id?'sel':''}"><td>${t.ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td><td>${t.c.id}</td><td>${t.cat[0]}</td><td>${inr(t.a)}</td><td>${Math.round(t.s)}</td><td><span class="bd ${d}">${d}</span></td></tr>`}).join('');
+ const t=sel;if(t){const d=dec(t.s);$('ex').innerHTML=`<p><span class="bd ${d}">${d}</span> &nbsp;Model score <b>${Math.round(t.s)}</b> / 100 · novelty ${t.an.toFixed(2)} · ${inr(t.a)} · ${t.c.id}</p>`+(t.p.length?t.p.map(([l,v])=>`<div class="bar"><em>${l}</em><b>+${v}</b></div><div class="bar"><i style="width:${Math.min(100,v*3)}%"></i></div>`).join(''):'<p class="mut">No risk signals fired.</p>')+`<p class="mut">Ground truth (synthetic): ${t.f?'this was fraud':'this was legitimate'}.</p>`}}
+function svg(w,h,b){return`<svg viewBox="0 0 ${w} ${h}" role="img">${b}</svg>`}
+function ano(){const W=520,H=260,L=40,B=26,col={Approve:'var(--ok)',Review:'var(--wn)',Block:'var(--bad)'};
+ let g='';for(let h=0;h<=24;h+=6)g+=`<text x="${L+(W-L-8)*h/24}" y="${H-8}" text-anchor="middle">${h}h</text>`;
+ [2,3,4,5].forEach(e=>{const y=H-B-(H-B-10)*(e-1)/4;g+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--ln)"/><text x="${L-4}" y="${y+3}" text-anchor="end">₹${10**e>=1000?10**e/1000+'k':10**e}</text>`});
+ T.forEach(t=>{const d=dec(t.s),x=L+(W-L-8)*(t.hr+.5)/24+(t.id*7%9-4),y=H-B-(H-B-10)*(Math.log10(t.a)-1)/4;g+=`<circle cx="${x}" cy="${y}" r="${d=='Approve'?2:3.2}" fill="${col[d]}" opacity="${d=='Approve'?.4:.85}"/>`});
+ $('sc1').innerHTML=svg(W,H,g);
+ const bins=[...Array(10)].map(()=>[0,0]);T.forEach(t=>bins[Math.min(9,Math.floor(t.s/10))][t.f?1:0]++);const mx=Math.max(...bins.map(b=>b[0]+b[1]));let h='';
+ bins.forEach((b,i)=>{const x=L+i*(W-L-8)/10,w=(W-L-8)/10-3,hl=(H-B-10)*Math.sqrt(b[0]/mx),hf=(H-B-10)*Math.sqrt(b[1]/mx);h+=`<rect x="${x}" y="${H-B-hl}" width="${w}" height="${hl}" fill="var(--ac)" opacity=".55"/><rect x="${x}" y="${H-B-hl-hf}" width="${w}" height="${hf}" fill="var(--bad)"/><text x="${x+w/2}" y="${H-8}" text-anchor="middle">${i*10}</text>`});
+ [rev,blk].forEach(v=>h+=`<line x1="${L+v*(W-L-8)/100}" x2="${L+v*(W-L-8)/100}" y1="6" y2="${H-B}" stroke="var(--ink)" stroke-dasharray="4 3"/>`);
+ h+=`<text x="${L}" y="12">blue = legitimate · red = fraud (height scaled by square root)</text>`;$('sc2').innerHTML=svg(W,H,h);
+ const cs=CATS.map(c=>{const a=T.filter(t=>t.cat[0]==c[0]),f=a.filter(t=>dec(t.s)!='Approve').length;return[c[0],a.length?f/a.length:0,a.length]}).sort((a,b)=>b[1]-a[1]);
+ $('cat').innerHTML=cs.map(c=>`<div class="bar"><em>${c[0]} <span class="mut">(${c[2]})</span></em><b>${(c[1]*100).toFixed(0)}%</b></div><div class="bar"><i style="width:${Math.min(100,c[1]*250)}%"></i></div>`).join('');
+ const m={};T.forEach(t=>{if(dec(t.s)!='Approve')m[t.c.id]=(m[t.c.id]||0)+1});
+ $('cu').innerHTML='<table><thead><tr><th>Customer</th><th>Flagged</th><th>Typical spend</th></tr></thead><tbody>'+Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([id,c])=>`<tr><td>${id}</td><td>${c}</td><td>${inr(CU[id])}</td></tr>`).join('')+'</tbody></table>'}
+const RK=[['Card-testing bursts of small purchases',4,3,'Velocity rule and auto-block for rapid small charges','Fraud ops'],['Account takeover',3,5,'Device and geo checks, step-up authentication','Security'],['False declines lose good customers',4,4,'Review band before hard block; track decline rate weekly','Product'],['Model drift as fraud tactics change',3,4,'Monthly threshold review with analyst-labelled outcomes','Data science'],['Privacy and compliance gaps (PCI DSS, DPDP Act)',2,5,'Data minimisation, access logs, audit trail','Compliance'],['Review queue backlog',3,3,'Prioritise queue by score; SLA alerts','Fraud ops']];
+const rc=v=>v>=15?'var(--bad)':v>=8?'var(--wn)':'var(--ok)',lv=v=>['','Rare','Unlikely','Possible','Likely','Almost certain'][v],im=v=>['','Minor','Moderate','Significant','Major','Severe'][v];
+function rsk(){let m='';for(let i=5;i>=1;i--)for(let l=1;l<=5;l++)m+=`<div style="background:${rc(i*l)}">${RK.map((r,k)=>r[1]==l&&r[2]==i?`<u>${k+1}</u>`:'').join('')}</div>`;$('mx').innerHTML=m;
+ $('rr').innerHTML=RK.map((r,k)=>`<tr><td>${k+1}</td><td style="white-space:normal">${r[0]}</td><td>${lv(r[1])}</td><td>${im(r[2])}</td><td><b style="color:${rc(r[1]*r[2])}">${r[1]*r[2]}</b></td><td style="white-space:normal">${r[3]}</td><td>${r[4]}</td></tr>`).join('');
+ const W=520,H=240,L=50,pts=[];for(let t=20;t<=90;t+=5)pts.push([t,stats(t,Math.min(100,t+30)).cost]);const mx=Math.max(...pts.map(p=>p[1])),mn=Math.min(...pts.map(p=>p[1])),X=t=>L+(W-L-10)*(t-20)/70,Y=c=>H-26-(H-40)*c/mx;
+ let g=`<polyline fill="none" stroke="var(--ac)" stroke-width="2" points="${pts.map(p=>X(p[0])+','+Y(p[1])).join(' ')}"/>`;const best=pts.find(p=>p[1]==mn);
+ g+=`<circle cx="${X(best[0])}" cy="${Y(best[1])}" r="5" fill="var(--ok)"/><text x="${X(best[0])}" y="${Y(best[1])-9}" text-anchor="middle">lowest cost: review above ${best[0]}</text>`;
+ g+=`<line x1="${X(Math.max(20,Math.min(90,rev)))}" x2="${X(Math.max(20,Math.min(90,rev)))}" y1="8" y2="${H-26}" stroke="var(--ink)" stroke-dasharray="4 3"/>`;
+ for(let t=20;t<=90;t+=10)g+=`<text x="${X(t)}" y="${H-8}" text-anchor="middle">${t}</text>`;g+=`<text x="${L-4}" y="${Y(mx)+3}" text-anchor="end">${inr(mx)}</text><text x="${L-4}" y="${H-26}" text-anchor="end">0</text>`;
+ $('sc3').innerHTML=svg(W,H,g)+'<p class="mut">X axis: review threshold (block threshold = review + 30). Dashed line: your current review setting.</p>'}
+function draw(){kpis();({mon,ano,rsk,ba(){}})[tab]()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x==b));['mon','ano','rsk','ba'].forEach(s=>$(s).classList.toggle('hid',s!=tab));draw()});
+$('tb').onclick=e=>{const r=e.target.closest('tr');if(r){sel=T.find(t=>t.id==r.dataset.i);mon()}};
+$('tb').onkeydown=e=>{if(e.key=='Enter')$('tb').onclick(e)};
+$('rv').oninput=e=>{rev=+e.target.value;if(blk<rev+10){blk=rev+10;$('bk').value=blk}sync()};$('bk').oninput=e=>{blk=+e.target.value;if(rev>blk-10){rev=blk-10;$('rv').value=rev}sync()};
+function sync(){$('rvv').textContent=rev;$('bkv').textContent=blk;draw()}
+$('pp').onclick=()=>{run=!run;$('pp').textContent=run?'Pause stream':'Resume stream'};
+for(let i=0;i<600;i++)gen();sel=T[T.length-1];
+setInterval(()=>{if(!run)return;const t=gen();if(tab=='mon'&&!sel.pinned)draw()},1500);draw();
+</script></body></html>
